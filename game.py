@@ -85,7 +85,7 @@ class Game:
         self.logger = Logger()
         pygame.font.init()
         config.INFO_FONT = pygame.font.Font(os.path.join(config.FONT_FOLDER, 'info_font.ttf'), 25)
-        pygame.display.set_caption('Title')
+        pygame.display.set_caption('Lost in spyce')
         self.WIDTH = None
         self.HEIGHT = None
         self.screen = None
