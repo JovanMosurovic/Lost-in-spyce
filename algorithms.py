@@ -1,7 +1,5 @@
 import random
 
-from pygame.mixer_music import queue
-
 
 class Algorithm:
     def get_path(self, state):
@@ -20,11 +18,11 @@ class ExampleAlgorithm(Algorithm):
 
 class Blue(Algorithm):
     def get_path(self, state): # DFS
-        stack = [(state, [])]
+        my_stack = [(state, [])]
         visited = set()
 
-        while stack:
-            current_state, path = stack.pop()
+        while my_stack:
+            current_state, path = my_stack.pop()
 
             if current_state.is_goal_state():
                 return path
@@ -33,8 +31,30 @@ class Blue(Algorithm):
                 visited.add(current_state.get_state('S'))
                 for action in reversed(current_state.get_legal_actions()):
                     next_state = current_state.generate_successor_state(action)
-                    stack.append((next_state, path + [action]))
+                    my_stack.append((next_state, path + [action]))
         return None
+
+class Red(Algorithm):
+    def get_path(self, state): # BFS
+        my_queue = [(state, [])]
+        visited = set()
+
+        while my_queue:
+            current_state, path = my_queue.pop()
+
+            if current_state.is_goal_state():
+                return path
+
+            if current_state.get_state('S') not in visited:
+                visited.add(current_state.get_state('S'))
+                for action in current_state.get_legal_actions():
+                    next_state = current_state.generate_successor_state(action)
+                    my_queue.insert(0, (next_state, path + [action]))
+        return None
+
+
+
+
 
 
 
