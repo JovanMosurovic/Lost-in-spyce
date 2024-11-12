@@ -34,6 +34,47 @@ class Blue(Algorithm):
                     my_stack.append((next_state, path + [action]))
         return None
 
+# region Faster implementation for Blue (DFS)
+class Node:
+    def __init__(self, state, action, parent=None):
+        self.state = state
+        self.action = action
+        self.parent = parent
+
+    def get_actions(self):
+        actions = []
+        current = self
+        while current.parent:
+            actions.append(current.action)
+            current = current.parent
+        return list(reversed(actions))
+
+
+class BlueOptimized(Algorithm):
+    def __init__(self):
+        self.visited = set()
+
+    def get_path(self, state):
+        start_node = Node(state, None)
+        stack = [start_node]
+
+        while stack:
+            node = stack.pop()
+
+            if node.state.spaceships == node.state.goals:
+                return node.get_actions()
+
+            if node.state.spaceships not in self.visited:
+                self.visited.add(node.state.spaceships)
+
+                for action in reversed(node.state.get_legal_actions()):
+                    next_state = node.state.generate_successor_state(action)
+                    if next_state.spaceships not in self.visited:
+                        next_node = Node(next_state, action, node)
+                        stack.append(next_node)
+        return None
+#endregion
+
 class Red(Algorithm):
     def get_path(self, state): # BFS
         my_queue = [(state, [])]
