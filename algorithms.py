@@ -1,5 +1,7 @@
 import random
 
+import config
+
 
 class Algorithm:
     def get_path(self, state):
@@ -129,7 +131,7 @@ class White(Algorithm):
                 if bitmask & 1:
                     positions.append((row, col))
                 col += 1
-                if col == 7:
+                if col == config.N:
                     col = 0
                     row += 1
                 bitmask >>= 1
