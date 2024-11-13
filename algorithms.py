@@ -120,6 +120,77 @@ class Black(Algorithm):
 
         return None
 
+class White(Algorithm):
+    def manhattan_distance(self, state):
+        def get_positions(bitmask):
+            positions = []
+            row, col = 0, 0
+            while bitmask:
+                if bitmask & 1:
+                    positions.append((row, col))
+                col += 1
+                if col == 7:
+                    col = 0
+                    row += 1
+                bitmask >>= 1
+            return positions
+
+        ship_positions = get_positions(state.spaceships)
+        goal_positions = get_positions(state.goals)
+
+        # if there are more ships/goals, we need to test all combinations
+        # Ako imamo više brodova/ciljeva, moramo testirati sve kombinacije
+        if len(ship_positions) > 1:
+            # First ship to first goal + second ship to second goal
+            # Prvi brod ka prvom cilju + drugi brod ka drugom cilju
+            dist1 = (abs(ship_positions[0][0] - goal_positions[0][0]) +
+                     abs(ship_positions[0][1] - goal_positions[0][1]) +
+                     abs(ship_positions[1][0] - goal_positions[1][0]) +
+                     abs(ship_positions[1][1] - goal_positions[1][1]))
+
+            # First ship to second goal + second ship to first goal
+            # Prvi brod ka drugom cilju + drugi brod ka prvom cilju
+            dist2 = (abs(ship_positions[0][0] - goal_positions[1][0]) +
+                     abs(ship_positions[0][1] - goal_positions[1][1]) +
+                     abs(ship_positions[1][0] - goal_positions[0][0]) +
+                     abs(ship_positions[1][1] - goal_positions[0][1]))
+
+            return min(dist1, dist2)
+        else:
+            # For one ship, we calculate the distance to the nearest goal
+            # Za jedan brod, računamo distancu do najbližeg cilja
+            min_distance = float('inf')
+            for goal_pos in goal_positions:
+                distance = abs(ship_positions[0][0] - goal_pos[0]) + abs(ship_positions[0][1] - goal_pos[1])
+                min_distance = min(min_distance, distance)
+            return min_distance
+
+    def get_path(self, state): # A*
+        paths = [(state, [], 0)]
+        visited = set()
+        visited.add(state.get_state('S'))
+
+        while paths:
+            current_state, path, current_cost = paths.pop(0)
+
+            if current_state.is_goal_state():
+                return path
+
+            for action in current_state.get_legal_actions():
+                next_state = current_state.generate_successor_state(action)
+                next_state_key = next_state.get_state('S')
+
+                if next_state_key not in visited:
+                    visited.add(next_state_key)
+                    action_cost = current_state.get_action_cost(action)
+                    total_cost = current_cost + action_cost + self.manhattan_distance(next_state)
+
+                    paths.append((next_state, path + [action], total_cost))
+
+            paths.sort(key=lambda x: x[2])
+
+        return None
+
 
 
 
