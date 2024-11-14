@@ -123,49 +123,60 @@ class Black(Algorithm):
         return None
 
 class White(Algorithm):
+    @staticmethod
+    def get_length(n):
+        length = 0
+        while n > 0:
+            length += 1
+            n //= 10
+        return length
+
+    @staticmethod
+    def get_positions(number):
+        bit_mask = int(bin(number)[2:]) # without 0b
+        needed_zeros = (config.M * config.N) - White.get_length(bit_mask)
+        bit_str = str('0' * needed_zeros + str(bit_mask))[::-1]
+
+        positions = []
+        for i in range(len(bit_str)):
+            if bit_str[i] == '1':
+                row = i // config.N
+                col = i % config.N
+                positions.append((row, col))
+        return positions
+
     def manhattan_distance(self, state):
-        def get_positions(bitmask):
-            positions = []
-            row, col = 0, 0
-            while bitmask:
-                if bitmask & 1:
-                    positions.append((row, col))
-                col += 1
-                if col == config.N:
-                    col = 0
-                    row += 1
-                bitmask >>= 1
-            return positions
+        ship_positions = self.get_positions(state.spaceships)
+        goal_positions = self.get_positions(state.goals)
 
-        ship_positions = get_positions(state.spaceships)
-        goal_positions = get_positions(state.goals)
+        total_distance = 0
+        used_goals = set()
 
-        # if there are more ships/goals, we need to test all combinations
-        # Ako imamo više brodova/ciljeva, moramo testirati sve kombinacije
-        if len(ship_positions) > 1:
-            # First ship to first goal + second ship to second goal
-            # Prvi brod ka prvom cilju + drugi brod ka drugom cilju
-            dist1 = (abs(ship_positions[0][0] - goal_positions[0][0]) +
-                     abs(ship_positions[0][1] - goal_positions[0][1]) +
-                     abs(ship_positions[1][0] - goal_positions[1][0]) +
-                     abs(ship_positions[1][1] - goal_positions[1][1]))
+        # region Old implementation
+        # for goal_pos in goal_positions:
+        #     min_dist = float('inf')
+        #     for  spaceship_pos in ship_positions:
+        #         dist = abs(spaceship_pos[0] - goal_pos[0]) + abs(spaceship_pos[1] - goal_pos[1])
+        #         min_dist = min(min_dist, dist)
+        #
+        #     total_distance += min_dist
+        # endregion
 
-            # First ship to second goal + second ship to first goal
-            # Prvi brod ka drugom cilju + drugi brod ka prvom cilju
-            dist2 = (abs(ship_positions[0][0] - goal_positions[1][0]) +
-                     abs(ship_positions[0][1] - goal_positions[1][1]) +
-                     abs(ship_positions[1][0] - goal_positions[0][0]) +
-                     abs(ship_positions[1][1] - goal_positions[0][1]))
-
-            return min(dist1, dist2)
-        else:
-            # For one ship, we calculate the distance to the nearest goal
-            # Za jedan brod, računamo distancu do najbližeg cilja
-            min_distance = float('inf')
+        for ship_pos in ship_positions:
+            min_dist = float('inf')
+            best_goal = None
             for goal_pos in goal_positions:
-                distance = abs(ship_positions[0][0] - goal_pos[0]) + abs(ship_positions[0][1] - goal_pos[1])
-                min_distance = min(min_distance, distance)
-            return min_distance
+                if goal_pos in used_goals:
+                    dist = abs(ship_pos[0] - goal_pos[0]) + abs(ship_pos[1] - goal_pos[1])
+                    if dist < min_dist:
+                        min_dist = dist
+                        best_goal = goal_pos
+            if best_goal:
+                used_goals.add(best_goal)
+                total_distance += min_dist
+
+        return total_distance
+
 
     def get_path(self, state): # A*
         paths = [(state, [], 0)]
